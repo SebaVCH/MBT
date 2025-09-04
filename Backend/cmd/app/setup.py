@@ -1,9 +1,15 @@
 from internal.infrastructure.database.database import StartDB
 from fastapi import FastAPI
 
-# Funcion para FastAPI, inicializa la base de datos y retorna la app
+from internal.interfaces.routes.routes import api_router
+from internal.utils.loadEnv import SetupEnv
+
+
+# Funcion para FastAPI, inicializa la base de datos, cargar variables de entorno y agregar las rutas
 def StartBackend() -> FastAPI:
-    app = FastAPI()
     StartDB()
+    app = FastAPI()
+    app.include_router(api_router)
+    SetupEnv()
 
     return app
