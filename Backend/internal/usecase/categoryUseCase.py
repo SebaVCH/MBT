@@ -7,3 +7,9 @@ class CategoryUseCase:
 
     def get_all_categories(self):
         return self.repository.get_all_categories()
+
+    def create_category(self, category_data):
+        return self.repository.create_category(category_data)
+
+    def remove_category(self, category_id):
+        return self.repository.remove_category(category_id)

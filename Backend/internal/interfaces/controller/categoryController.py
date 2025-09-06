@@ -16,3 +16,15 @@ class CategoryController:
         if not categories:
             raise HTTPException(status_code=404, detail="Categorías no encontradas")
         return categories
+
+    def create_category(self, category_data):
+        category = self.useCase.create_category(category_data)
+        if not category:
+            raise HTTPException(status_code=400, detail="Error al crear la categoría")
+        return category
+
+    def remove_category(self, category_id):
+        result = self.useCase.remove_category(category_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Categoría no encontrada")
+        return {"detail": "Categoría eliminada exitosamente"}
