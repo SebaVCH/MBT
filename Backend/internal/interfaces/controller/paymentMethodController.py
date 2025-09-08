@@ -1,13 +1,13 @@
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from internal.infrastructure.database.database import ReturnDB
+from internal.infrastructure.database.db import get_db
 from internal.repository.paymentMethodRepository import PaymentMethodRepository
 from internal.usecase.paymentMethodUseCase import PaymentMethodUseCase
 
 
 class PaymentMethodController():
-    def __init__(self, db: Session = Depends(ReturnDB)):
+    def __init__(self, db: Session = Depends(get_db)):
         repository = PaymentMethodRepository(db)
         self.useCase = PaymentMethodUseCase(repository)
 

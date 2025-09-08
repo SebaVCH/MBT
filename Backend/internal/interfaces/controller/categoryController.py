@@ -1,13 +1,13 @@
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from internal.infrastructure.database.database import ReturnDB
+from internal.infrastructure.database.db import get_db
 from internal.repository.categoryRepository import CategoryRepository
 from internal.usecase.categoryUseCase import CategoryUseCase
 
 # Controlador de Categorías
 class CategoryController:
-    def __init__(self, db: Session = Depends(ReturnDB)):
+    def __init__(self, db: Session = Depends(get_db)):
         repository = CategoryRepository(db)
         self.useCase = CategoryUseCase(repository)
 
