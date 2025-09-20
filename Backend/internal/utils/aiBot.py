@@ -1,7 +1,7 @@
-import os
+#import os
 
-import ollama
+#import ollama
 
-welcomeMessage = ollama.generate(model = os.getenv("AI_MODEL"), prompt = "Generame un saludo de bienvenida")
-def welcome():
-    print(welcomeMessage)
+#welcomeMessage = ollama.generate(model = os.getenv("AI_MODEL"), prompt = "Generame un saludo de bienvenida")
+#def welcome():
+#    print(welcomeMessage)

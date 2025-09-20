@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from internal.infrastructure.database.db import get_db
 from internal.domain.person import Person
-from internal.schemas.auth_schema import UserRegister, UserLogin, TokenResponse
+from internal.schemas.authSchema import UserRegister, UserLogin, TokenResponse
 from internal.utils.security import hash_password, verify_password, create_access_token
 
-auth_router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@auth_router.post("/register", response_model=TokenResponse)
+@router.post("/register", response_model=TokenResponse)
 def register(user: UserRegister, db: Session = Depends(get_db)):
     db_user = db.query(Person).filter(Person.email == user.email).first()
     if db_user:
@@ -25,7 +25,7 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     token = create_access_token({"sub": str(new_user.id)})
     return {"access_token": token, "token_type": "bearer"}
 
-@auth_router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse)
 def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(Person).filter(Person.email == user.email).first()
     if not db_user or not verify_password(user.password, db_user.password):

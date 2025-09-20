@@ -8,7 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 
 oauth2_scheme = HTTPBearer()
 
-person_router = APIRouter(prefix="/person", tags=["Person"])
+router = APIRouter(prefix="/person", tags=["Person"])
 
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = decode_token(token.credentials)
@@ -19,7 +19,7 @@ def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
     return user
 
-@person_router.post("/deposit")
+@router.post("/deposit")
 def deposit(amount: int, user: Person = Depends(get_current_user), db: Session = Depends(get_db)):
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Monto inválido")
@@ -27,7 +27,7 @@ def deposit(amount: int, user: Person = Depends(get_current_user), db: Session =
     db.commit()
     return {"message": "Monto ingresado", "balance": user.balance}
 
-@person_router.post("/withdraw")
+@router.post("/withdraw")
 def withdraw(amount: int, user: Person = Depends(get_current_user), db: Session = Depends(get_db)):
     if amount <= 0 or amount > user.balance:
         raise HTTPException(status_code=400, detail="Monto inválido o saldo insuficiente")

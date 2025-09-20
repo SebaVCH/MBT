@@ -1,6 +1,6 @@
 from cmd.app.setup import StartBackend
-from internal.utils.aiBot import welcome
+#from internal.utils.aiBot import welcome
 
 # Iniciar backend
-welcome()
+#welcome()
 app = StartBackend()

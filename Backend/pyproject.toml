@@ -7,10 +7,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.13"
-fastapi = "^0.116.1"
+fastapi = {extras = ["standard"], version = "^0.116.2"}
 bcrypt = "^4.3.0"
 python-jose = "^3.5.0"
 passlib = "^1.7.4"
+sqlalchemy = "^2.0.43"
+ollama = "^0.5.4"
 
 
 [build-system]
