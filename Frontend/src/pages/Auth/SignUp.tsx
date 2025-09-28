@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import AuthLayout from "../../components/layouts/AuthLayout";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Input from "../../components/layouts/Inputs/Input";
 import { validateEmail } from "../../utils/helper";
 
 const SignUp = () => {
-    const [profile, setProfile] = useState(null);
+    //const [profile, setProfile] = useState(null);
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const[error, setError] = useState("");
 
-    const navigate= useNavigate();
+    // const navigate= useNavigate();
 
-    const handleSignUp = async (e) => {
+    interface SignUpFormEvent extends React.FormEvent<HTMLFormElement> {}
+
+    const handleSignUp = async (e: SignUpFormEvent) => {
         e.preventDefault();
         if (!fullName) {
             setError("Por favor ingresa tu nombre");

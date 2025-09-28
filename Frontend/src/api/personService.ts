@@ -22,7 +22,7 @@ const mockPersonService = {
     return { ...mockPerson, id };
   },
 
-  async updatePersonBalance(personID: number, newBalance: number): Promise<Person> {
+  async updatePersonBalance(newBalance: number): Promise<Person> {
     await delay(400);
     mockPerson.balance = newBalance;
     return mockPerson;
@@ -45,6 +45,6 @@ const realPersonService = {
 
 export const personService = config.useMockData ? mockPersonService : realPersonService;
 
-function delay(arg0: number) {
+function delay(_arg0: number) {
     throw new Error('Function not implemented.');
 }

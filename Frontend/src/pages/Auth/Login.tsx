@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AuthLayout from "../../components/layouts/AuthLayout";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Input from "../../components/layouts/Inputs/Input";
 import { validateEmail } from "../../utils/helper";
 
@@ -9,9 +9,11 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     
-    const navigate= useNavigate();
+    // const navigate= useNavigate();
 
-    const handleLogin = async (e) => {
+    interface HandleLoginEvent extends React.FormEvent<HTMLFormElement> {}
+
+    const handleLogin = async (e: HandleLoginEvent): Promise<void> => {
         e.preventDefault();
 
         if (!validateEmail(email)) {
@@ -38,7 +40,7 @@ const Login = () => {
                 <form onSubmit={handleLogin}>
                     <Input 
                         value={email}
-                        onChange={({target}) => setEmail(target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                         label="Correo"
                         type="text"
                         placeholder="nombre@dominio.com"
@@ -46,7 +48,7 @@ const Login = () => {
 
                     <Input 
                         value={password}
-                        onChange={({target}) => setPassword(target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                         label="Contraseña"
                         type="password"
                         placeholder=""

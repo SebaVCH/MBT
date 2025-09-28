@@ -28,7 +28,13 @@ const Expense: React.FC = () => {
         categoryService.getAllCategories(),
         paymentMethodService.getAllPaymentMethods()
       ]);
-      setCategories(cats);
+      setCategories(
+        cats.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          personID: cat.personID ?? 1 // Replace 1 with appropriate value if needed
+        }))
+      );
       setPaymentMethods(pms);
     } catch (error) {
       console.error('Error loading form data:', error);

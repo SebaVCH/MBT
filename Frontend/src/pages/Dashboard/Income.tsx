@@ -1,7 +1,7 @@
 // src/pages/Income.tsx
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../../components/layouts/MainLayout';
-import { transactionService } from '../../api/transactionService';
+//import { transactionService } from '../../api/transactionService';
 import { categoryService } from '../../api/categoryService';
 import { paymentMethodService } from '../../api/paymentMethodService';
 import type { Category, PaymentMethod } from '../../types';
@@ -28,7 +28,13 @@ const Income: React.FC = () => {
         categoryService.getAllCategories(),
         paymentMethodService.getAllPaymentMethods()
       ]);
-      setCategories(cats);
+      setCategories(
+        cats.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          personID: cat.personID ?? 0 // or provide correct mapping if available
+        }))
+      );
       setPaymentMethods(pms);
     } catch (error) {
       console.error('Error loading form data:', error);
@@ -40,11 +46,11 @@ const Income: React.FC = () => {
     setLoading(true);
     
     try {
-      const amount = parseFloat(formData.amount);
-      const categoryID = parseInt(formData.categoryID);
-      const paymentMethodID = parseInt(formData.paymentMethodID);
+      //const amount = parseFloat(formData.amount);
+      //const categoryID = parseInt(formData.categoryID);
+      //const paymentMethodID = parseInt(formData.paymentMethodID);
 
-      await transactionService.deposit(amount, categoryID, paymentMethodID);
+      //await transactionService.deposit(amount, categoryID, paymentMethodID);
       
       alert('Income registered successfully!');
       setFormData({

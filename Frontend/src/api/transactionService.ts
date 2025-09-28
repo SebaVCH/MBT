@@ -1,5 +1,5 @@
 
-import type { Transaction, TransactionCreate, TransactionResponse } from '../types/transaction';
+import type { Transaction, TransactionCreate } from '../types/transaction';
 import { config } from './config';
 import { apiClient } from './apiClient';
 
