@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: ./Backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./Backend/database.db:/app/database.db
+    networks:
+      - mbt-network
+
+  frontend:
+    build:
+      context: ./Frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - mbt-network
+
+networks:
+  mbt-network:
+    driver: bridge
+
+volumes:
+  db-data:
