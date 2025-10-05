@@ -21,7 +21,6 @@ def create_payment_method(payment_method_data: PaymentMethodCreate, db: Session 
     return new_payment_method
 
 
-# Eliminar un método de pago por ID
 @router.delete("/{payment_method_id}")
 def remove_payment_method(payment_method_id: int, db: Session = Depends(get_db)):
     payment_method = db.query(PaymentMethod).filter(PaymentMethod.id == payment_method_id).first()

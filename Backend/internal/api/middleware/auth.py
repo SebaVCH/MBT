@@ -17,10 +17,9 @@ def get_current_user(
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # ✅ Aceptamos tanto 'email' como 'sub' (por compatibilidad)
         email = payload.get("email") or payload.get("sub")
 
-        if not isinstance(email, str):  # 👈 verificamos tipo
+        if not isinstance(email, str): 
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
 
     except JWTError:
