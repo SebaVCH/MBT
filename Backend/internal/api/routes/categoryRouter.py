@@ -21,7 +21,6 @@ def create_category(category_data: CategoryCreate, db: Session = Depends(get_db)
     db.refresh(new_category)
     return new_category
 
-# Eliminar una categoría por ID
 @router.delete("/{category_id}")
 def remove_category(category_id: int, db: Session = Depends(get_db)):
     category = db.query(Category).filter(Category.id == category_id).first()

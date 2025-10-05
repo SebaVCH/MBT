@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from internal.infrastructure.database.db import get_db
 from internal.domain.person import Person
-from internal.api.middleware.auth import get_current_user  # ✅ importar solo esto
+from internal.api.middleware.auth import get_current_user
 
 router = APIRouter(prefix="/person", tags=["Person"])
 
