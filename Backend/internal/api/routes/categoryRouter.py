@@ -23,14 +23,35 @@ def create_category(category_data: CategoryCreate, db: Session = Depends(get_db)
     return new_category
 
 @router.delete("/{category_id}")
-def remove_category(category_id: int, db: Session = Depends(get_db)):
-    category = db.query(Category).filter(Category.id == category_id).first()
+def remove_category(
+    category_id: int,
+    db: Session = Depends(get_db),
+    current_user: Person = Depends(get_current_user)
+):
+    category = db.query(Category).filter(
+        Category.id == category_id,
+        Category.personID == current_user.id
+    ).first()
+
     if not category:
-        raise HTTPException(status_code=404, detail="Categoría no encontrada")
-    try:
-        db.delete(category)
+        raise HTTPException(status_code=404, detail="Categoría no encontrada o no pertenece al usuario")
+
+    other_category = db.query(Category).filter(
+        Category.name == "Otros",
+        (Category.personID == current_user.id) | (Category.personID == 0)
+    ).first()
+
+    if not other_category:
+        other_category = Category(name="Otros", personID=current_user.id)
+        db.add(other_category)
         db.commit()
-        return {"detail": "Categoría eliminada exitosamente"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Error al eliminar la categoría")
+        db.refresh(other_category)
+
+    db.query(Transaction).filter(Transaction.categoryID == category.id).update(
+        {Transaction.categoryID: other_category.id}
+    )
+
+    db.delete(category)
+    db.commit()
+
+    return {"detail": f"Categoría eliminada y transacciones reasignadas a '{other_category.name}'"}

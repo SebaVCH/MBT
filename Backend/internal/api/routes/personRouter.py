@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from internal.domain.category import Category
 from internal.domain.transaction import Transaction
@@ -66,3 +67,42 @@ def withdraw(request: WithdrawRequest ,user: Person = Depends(get_current_user),
     db.commit()
     db.refresh(transaction)
     return transaction
+
+@router.get("/balance")
+def get_user_balance(db: Session = Depends(get_db), user: Person = Depends(get_current_user)):
+    transactions = db.query(Transaction).filter(Transaction.personID == user.id).all()
+    if not transactions:
+        return {"balance": 0}
+
+    total = 0
+    for t in transactions:
+        if t.category and t.category.name.lower() == "ingreso":
+            total += t.amount
+        else:
+            total -= t.amount
+    return {"balance": total}
+
+@router.get("/income")
+def get_user_income(db: Session = Depends(get_db), user: Person = Depends(get_current_user)):
+    total_income = (
+        db.query(func.sum(Transaction.amount))
+        .join(Category)
+        .filter(Transaction.personID == user.id, Category.name.ilike("ingreso"))
+        .scalar()
+    )
+    return {"total_income": total_income or 0}
+
+@router.get("/expenses")
+def get_user_expenses(db: Session = Depends(get_db), user: Person = Depends(get_current_user)):
+    total_expenses = (
+        db.query(func.sum(Transaction.amount))
+        .join(Category)
+        .filter(Transaction.personID == user.id, Category.name.ilike("ingreso") == False)
+        .scalar()
+    )
+    return {"total_expenses": total_expenses or 0}
+
+@router.get("/transactions", response_model=list[TransactionResponse])
+def get_user_transactions(db: Session = Depends(get_db), user: Person = Depends(get_current_user)):
+    transactions = db.query(Transaction).filter(Transaction.personID == user.id).all()
+    return transactions

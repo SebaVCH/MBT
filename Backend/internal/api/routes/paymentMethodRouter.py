@@ -23,16 +23,35 @@ def create_payment_method(payment_method_data: PaymentMethodCreate, db: Session 
 
 
 @router.delete("/{payment_method_id}")
-def remove_payment_method(payment_method_id: int, db: Session = Depends(get_db)):
-    payment_method = db.query(PaymentMethod).filter(PaymentMethod.id == payment_method_id).first()
+def remove_payment_method(
+    payment_method_id: int,
+    db: Session = Depends(get_db),
+    current_user: Person = Depends(get_current_user)
+):
+    payment_method = db.query(PaymentMethod).filter(
+        PaymentMethod.id == payment_method_id,
+        PaymentMethod.personID == current_user.id
+    ).first()
+
     if not payment_method:
-        raise HTTPException(status_code=404, detail="Método de pago no encontrado")
+        raise HTTPException(status_code=404, detail="Método de pago no encontrado o no pertenece al usuario")
 
-    try:
-        db.delete(payment_method)
+    other_method = db.query(PaymentMethod).filter(
+        PaymentMethod.name == "Otros",
+        (PaymentMethod.personID == current_user.id) | (PaymentMethod.personID == 0)
+    ).first()
+
+    if not other_method:
+        other_method = PaymentMethod(name="Otros", personID=current_user.id)
+        db.add(other_method)
         db.commit()
-        return {"detail": "Método de pago eliminado exitosamente"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Error al eliminar el método de pago")
+        db.refresh(other_method)
 
+    db.query(Transaction).filter(Transaction.paymentMethodID == payment_method.id).update(
+        {Transaction.paymentMethodID: other_method.id}
+    )
+
+    db.delete(payment_method)
+    db.commit()
+
+    return {"detail": f"Método de pago eliminado y transacciones reasignadas a '{other_method.name}'"}
