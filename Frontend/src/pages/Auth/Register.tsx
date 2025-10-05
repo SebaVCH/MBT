@@ -1,11 +1,12 @@
-// src/pages/Auth/Login.tsx
+// src/pages/Auth/Register.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/layouts/AuthLayout';
 import { authService } from '../../api/authService';
 import toast from 'react-hot-toast';
 
-const Login: React.FC = () => {
+const Register: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,11 +17,11 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await authService.login({ email, password });
-      toast.success('¡Bienvenido!');
+      await authService.register({ name, email, password });
+      toast.success('¡Cuenta creada exitosamente!');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.message || 'Error al iniciar sesión');
+      toast.error(error.message || 'Error al crear la cuenta');
     } finally {
       setLoading(false);
     }
@@ -29,11 +30,25 @@ const Login: React.FC = () => {
   return (
     <AuthLayout>
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-800">Bienvenido de nuevo</h2>
-        <p className="text-gray-600 mt-2">Ingresa a tu cuenta</p>
+        <h2 className="text-2xl font-bold text-gray-800">Crear cuenta</h2>
+        <p className="text-gray-600 mt-2">Regístrate para comenzar</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nombre completo
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Tu nombre"
+          />
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Correo electrónico
@@ -65,15 +80,15 @@ const Login: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
         </button>
 
         <p className="text-center text-gray-600 text-sm">
-          ¿No tienes cuenta?{' '}
-          <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
-            Regístrate aquí
+          ¿Ya tienes cuenta?{' '}
+          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            Inicia sesión aquí
           </Link>
         </p>
       </form>
@@ -81,4 +96,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Register;

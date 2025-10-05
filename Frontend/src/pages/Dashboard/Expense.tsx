@@ -1,22 +1,19 @@
-
+// src/pages/Dashboard/Expense.tsx
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../../components/layouts/MainLayout';
 import { transactionService } from '../../api/transactionService';
-import { categoryService } from '../../api/categoryService';
-import { paymentMethodService } from '../../api/paymentMethodService';
-import type { Category, PaymentMethod, TransactionCreate } from '../../types';
+import { authService } from '../../api/authService';
+import type { Category, PaymentMethod } from '../../types/api';
+import toast from 'react-hot-toast';
 
-//Similar a Income pero con amount negativo
-//(Solo cambiaría el título y la lógica del amount a negativo)
 const Expense: React.FC = () => {
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [paymentMethodId, setPaymentMethodId] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [formData, setFormData] = useState({
-    amount: '',
-    categoryID: '',
-    paymentMethodID: '',
-    date: new Date().toISOString().split('T')[0]
-  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadFormData();
@@ -25,16 +22,10 @@ const Expense: React.FC = () => {
   const loadFormData = async () => {
     try {
       const [cats, pms] = await Promise.all([
-        categoryService.getAllCategories(),
-        paymentMethodService.getAllPaymentMethods()
+        transactionService.getCategories(),
+        transactionService.getPaymentMethods()
       ]);
-      setCategories(
-        cats.map((cat: any) => ({
-          id: cat.id,
-          name: cat.name,
-          personID: cat.personID ?? 1 // Replace 1 with appropriate value if needed
-        }))
-      );
+      setCategories(cats);
       setPaymentMethods(pms);
     } catch (error) {
       console.error('Error loading form data:', error);
@@ -43,54 +34,67 @@ const Expense: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const transactionData: TransactionCreate = {
-        personID: 1, // Obtener del usuario logueado
-        categoryID: parseInt(formData.categoryID),
-        paymentMethodID: parseInt(formData.paymentMethodID),
-        amount: Math.abs(parseFloat(formData.amount)), // Asegurar positivo
-        date: formData.date
-      };
+    setLoading(true);
 
-      await transactionService.createTransaction(transactionData);
-      alert('Income registered successfully!');
-      setFormData({
-        amount: '',
-        categoryID: '',
-        paymentMethodID: '',
-        date: new Date().toISOString().split('T')[0]
-      });
-    } catch (error) {
-      console.error('Error creating income:', error);
-      alert('Error registering income');
+    try {
+      const numericAmount = parseFloat(amount);
+      if (numericAmount <= 0) {
+        toast.error('El monto debe ser mayor a 0');
+        return;
+      }
+
+      // Usar el endpoint REAL de withdraw
+      await transactionService.withdraw(numericAmount);
+      
+      toast.success('¡Gasto registrado exitosamente!');
+      
+      // Actualizar balance local
+      authService.updateLocalBalance(-numericAmount);
+      
+      // Limpiar formulario
+      setAmount('');
+      setDescription('');
+      setCategoryId('');
+      setPaymentMethodId('');
+      
+      // Recargar para ver cambios
+      setTimeout(() => window.location.href = '/dashboard', 1000);
+      
+    } catch (error: any) {
+      toast.error(error.message || 'Error registrando el gasto');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <MainLayout>
-      <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-        <h1>Register Income</h1>
+      <div className="max-w-md mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6">💸 Registrar Gasto</h1>
         
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '15px' }}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label>Amount ($)</label>
+            <label className="block text-sm font-medium mb-2">Monto ($)</label>
             <input
               type="number"
               step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({...formData, amount: e.target.value})}
+              min="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               required
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              placeholder="0.00"
             />
           </div>
 
           <div>
-            <label>Category</label>
+            <label className="block text-sm font-medium mb-2">Categoría</label>
             <select
-              value={formData.categoryID}
-              onChange={(e) => setFormData({...formData, categoryID: e.target.value})}
-              required
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
-              <option value="">Select a category</option>
+              <option value="">Selecciona una categoría</option>
               {categories.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
@@ -98,13 +102,13 @@ const Expense: React.FC = () => {
           </div>
 
           <div>
-            <label>Payment Method</label>
+            <label className="block text-sm font-medium mb-2">Método de Pago</label>
             <select
-              value={formData.paymentMethodID}
-              onChange={(e) => setFormData({...formData, paymentMethodID: e.target.value})}
-              required
+              value={paymentMethodId}
+              onChange={(e) => setPaymentMethodId(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
-              <option value="">Select a payment method</option>
+              <option value="">Selecciona un método de pago</option>
               {paymentMethods.map(pm => (
                 <option key={pm.id} value={pm.id}>{pm.name}</option>
               ))}
@@ -112,16 +116,23 @@ const Expense: React.FC = () => {
           </div>
 
           <div>
-            <label>Date</label>
+            <label className="block text-sm font-medium mb-2">Descripción</label>
             <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData({...formData, date: e.target.value})}
-              required
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              placeholder="Descripción del gasto"
             />
           </div>
 
-          <button type="submit">Register Income</button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? 'Procesando...' : 'Registrar Gasto'}
+          </button>
         </form>
       </div>
     </MainLayout>

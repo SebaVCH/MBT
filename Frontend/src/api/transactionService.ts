@@ -1,86 +1,55 @@
-
-import type { Transaction, TransactionCreate } from '../types/transaction';
-import { config } from './config';
+// src/api/transactionService.ts
 import { apiClient } from './apiClient';
+import type { Transaction, Category, PaymentMethod } from '../types/api';
 
-// Datos mock temporalmente
-const mockTransactions: Transaction[] = [
-  {
-    id: 1,
-    personID: 1,
-    categoryID: 1,
-    paymentMethodID: 1,
-    date: '2024-01-15T10:30:00',
-    amount: 1000
-  },
-  {
-    id: 2,
-    personID: 1,
-    categoryID: 2,
-    paymentMethodID: 2,
-    date: '2024-01-14T14:20:00',
-    amount: -250
-  }
-];
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Servicio mock
-const mockTransactionService = {
-  async getTransactionsByPerson(personID: number): Promise<Transaction[]> {
-    await delay(800);
-    return mockTransactions.filter(t => t.personID === personID);
+export const transactionService = {
+  // Depositar dinero
+  async deposit(amount: number): Promise<void> {
+    await apiClient.post('/person/deposit', { amount });
   },
 
-  async getRecentTransactions(limit: number = 5): Promise<Transaction[]> {
-    await delay(600);
-    return mockTransactions
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, limit);
+  // Retirar dinero (gastos)
+  async withdraw(amount: number): Promise<void> {
+    await apiClient.post('/person/withdraw', { amount });
   },
 
-  async createTransaction(transactionData: TransactionCreate): Promise<Transaction> {
-    await delay(500);
-    
-    const newTransaction: Transaction = {
-      id: Math.max(0, ...mockTransactions.map(t => t.id)) + 1,
-      date: transactionData.date || new Date().toISOString(),
-      ...transactionData
-    };
-    
-    mockTransactions.push(newTransaction);
-    return newTransaction;
+  // Obtener transacciones (si existe el endpoint)
+  async getTransactions(): Promise<Transaction[]> {
+    try {
+      return await apiClient.get<Transaction[]>('/transactions');
+    } catch (error) {
+      // Si no existe el endpoint, devolver array vacío
+      return [];
+    }
   },
 
-  async getTransactionById(id: number): Promise<Transaction> {
-    await delay(300);
-    const transaction = mockTransactions.find(t => t.id === id);
-    if (!transaction) throw new Error('Transaction not found');
-    return transaction;
+  // Obtener categorías - ENDPOINT REAL
+  async getCategories(): Promise<Category[]> {
+    return await apiClient.get<Category[]>('/category/');
+  },
+
+  // Crear categoría - ENDPOINT REAL
+  async createCategory(name: string): Promise<Category> {
+    return await apiClient.post<Category>('/category/', { name });
+  },
+
+  // Eliminar categoría - ENDPOINT REAL
+  async deleteCategory(categoryId: number): Promise<void> {
+    await apiClient.delete(`/category/${categoryId}`);
+  },
+
+  // Obtener métodos de pago - ENDPOINT REAL
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
+    return await apiClient.get<PaymentMethod[]>('/payment-method/');
+  },
+
+  // Crear método de pago - ENDPOINT REAL
+  async createPaymentMethod(name: string): Promise<PaymentMethod> {
+    return await apiClient.post<PaymentMethod>('/payment-method/', { name });
+  },
+
+  // Eliminar método de pago - ENDPOINT REAL
+  async deletePaymentMethod(paymentMethodId: number): Promise<void> {
+    await apiClient.delete(`/payment-method/${paymentMethodId}`);
   }
 };
-
-// Servicio real (AJUSTAR CUANDO VEA LOS ENDPOINTS REALES)
-const realTransactionService = {
-  async getTransactionsByPerson(personID: number): Promise<Transaction[]> {
-    // Probable endpoint: GET /person/{id}/transactions
-    return apiClient.get<Transaction[]>(`/person/${personID}/transactions`);
-  },
-
-  async getRecentTransactions(limit: number = 5): Promise<Transaction[]> {
-    // Probable endpoint: GET /transactions/recent
-    return apiClient.get<Transaction[]>(`/transactions/recent?limit=${limit}`);
-  },
-
-  async createTransaction(transactionData: TransactionCreate): Promise<Transaction> {
-    // Probable endpoint: POST /transactions
-    return apiClient.post<Transaction>('/transactions', transactionData);
-  },
-
-  async getTransactionById(id: number): Promise<Transaction> {
-    // Probable endpoint: GET /transactions/{id}
-    return apiClient.get<Transaction>(`/transactions/${id}`);
-  }
-};
-
-export const transactionService = config.useMockData ? mockTransactionService : realTransactionService;

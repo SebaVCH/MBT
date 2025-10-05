@@ -1,45 +1,49 @@
 // src/api/apiClient.ts
-import { config } from './config';
+const API_BASE_URL = 'http://localhost:8000';
 
 class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  private getAuthToken(): string | null {
+    return localStorage.getItem('token');
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-    
-    const requestConfig: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const token = this.getAuthToken();
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...options.headers,
+    };
+
+    const config: RequestInit = {
+      headers,
       ...options,
     };
 
-    try {
-      const response = await fetch(url, requestConfig);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    const response = await fetch(url, config);
 
-      // Para DELETE endpoints que no retornan contenido
-      if (response.status === 204 || response.headers.get('content-length') === '0') {
-        return {} as T;
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+      throw new Error('Authentication required');
     }
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || 'Request failed');
+    }
+
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    return response.json();
   }
 
   async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
+    return this.request<T>(endpoint);
   }
 
   async post<T>(endpoint: string, data?: any): Promise<T> {
@@ -56,10 +60,9 @@ class ApiClient {
     });
   }
 
-  async delete<T = void>(endpoint: string): Promise<T> {
+  async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
 }
 
-// Exportar una instancia configurada
-export const apiClient = new ApiClient(config.apiBaseUrl);
+export const apiClient = new ApiClient();

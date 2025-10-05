@@ -3,6 +3,8 @@ import type { Person } from '../types/person';
 import { config } from './config';
 import { apiClient } from './apiClient';
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const mockPerson: Person = {
   id: 1,
   email: 'mike@example.com',
@@ -22,29 +24,51 @@ const mockPersonService = {
     return { ...mockPerson, id };
   },
 
-  async updatePersonBalance(newBalance: number): Promise<Person> {
-    await delay(400);
-    mockPerson.balance = newBalance;
-    return mockPerson;
+  async updatePersonBalance(personID: number, newBalance: number): Promise<Person> {
+    return apiClient.put<Person>(`/person/${personID}/balance`, { balance: newBalance });
   }
 };
 
 const realPersonService = {
   async getCurrentPerson(): Promise<Person> {
-    return apiClient.get<Person>('/person/current');
+    // Probar diferentes endpoints comunes
+    const endpoints = [
+      '/users/me',
+      '/user/me',
+      '/auth/me',
+      '/me',
+      '/person/me'
+    ];
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🔍 Probando endpoint de persona: ${endpoint}`);
+        const response = await apiClient.get<Person>(endpoint);
+        console.log(`✅ Persona obtenida de: ${endpoint}`, response);
+        return response;
+      } catch (error) {
+        console.log(`❌ Falló: ${endpoint}`);
+      }
+    }
+    
+    // Si ningún endpoint funciona, usar datos del localStorage
+    const storedPerson = localStorage.getItem('currentPerson');
+    if (storedPerson) {
+      console.log("⚠️ Usando datos de localStorage para persona");
+      return JSON.parse(storedPerson);
+    }
+    
+    throw new Error('No se pudo obtener los datos de la persona');
   },
 
   async getPersonById(id: number): Promise<Person> {
     return apiClient.get<Person>(`/person/${id}`);
   },
 
-  async updatePersonBalance(personID: number, newBalance: number): Promise<Person> {
+    async updatePersonBalance(personID: number, newBalance: number): Promise<Person> {
     return apiClient.put<Person>(`/person/${personID}/balance`, { balance: newBalance });
   }
 };
 
-export const personService = config.useMockData ? mockPersonService : realPersonService;
 
-function delay(_arg0: number) {
-    throw new Error('Function not implemented.');
-}
+export const personService = config.useMockData ? mockPersonService : realPersonService;

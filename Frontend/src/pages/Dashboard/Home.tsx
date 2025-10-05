@@ -1,12 +1,12 @@
-// src/pages/Home.tsx
+// src/pages/Dashboard/Home.tsx
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../../components/layouts/MainLayout';
 import { transactionService } from '../../api/transactionService';
-import { personService } from '../../api/personService';
-import type { Transaction, Person } from '../../types';
+import { authService } from '../../api/authService';
+import type { Transaction, User } from '../../types/api';
 
 const Home: React.FC = () => {
-  const [person, setPerson] = useState<Person | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,13 +16,11 @@ const Home: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      // Obtener persona actual (usar ID del usuario logueado)
-      const personData = await personService.getCurrentPerson();
-      setPerson(personData);
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser);
 
-      // Obtener transacciones recientes
-      const transactionsData = await transactionService.getRecentTransactions();
-      setTransactions(transactionsData);
+      const userTransactions = await transactionService.getTransactions();
+      setTransactions(userTransactions);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -30,71 +28,65 @@ const Home: React.FC = () => {
     }
   };
 
-  // Calcular totals
   const totalIncome = transactions
-    .filter(t => t.amount > 0)
+    .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalExpenses = transactions
-    .filter(t => t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
 
-  if (loading) return <MainLayout><div>Loading...</div></MainLayout>;
+  if (loading) {
+    return <MainLayout><div>Cargando...</div></MainLayout>;
+  }
 
   return (
     <MainLayout>
-      <div>
-        {/* Financial Overview */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
-          <div style={{ background: 'white', padding: '20px', borderRadius: '10px', textAlign: 'center' }}>
-            <h3 style={{ color: '#7f8c8d' }}>Current Balance</h3>
-            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#27ae60' }}>
-              ${person?.balance || 0}
+      <div className="p-6">
+        {/* Resumen Financiero */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow text-center">
+            <h3 className="text-gray-600 mb-2">Balance Actual</h3>
+            <p className="text-3xl font-bold text-green-600">
+              ${user?.balance?.toLocaleString() || 0}
             </p>
           </div>
           
-          <div style={{ background: 'white', padding: '20px', borderRadius: '10px', textAlign: 'center' }}>
-            <h3 style={{ color: '#7f8c8d' }}>Total Income</h3>
-            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#3498db' }}>
-              ${totalIncome}
+          <div className="bg-white p-6 rounded-lg shadow text-center">
+            <h3 className="text-gray-600 mb-2">Total Ingresos</h3>
+            <p className="text-3xl font-bold text-blue-600">
+              ${totalIncome.toLocaleString()}
             </p>
           </div>
           
-          <div style={{ background: 'white', padding: '20px', borderRadius: '10px', textAlign: 'center' }}>
-            <h3 style={{ color: '#7f8c8d' }}>Total Expenses</h3>
-            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#e74c3c' }}>
-              ${totalExpenses}
+          <div className="bg-white p-6 rounded-lg shadow text-center">
+            <h3 className="text-gray-600 mb-2">Total Gastos</h3>
+            <p className="text-3xl font-bold text-red-600">
+              ${totalExpenses.toLocaleString()}
             </p>
           </div>
         </div>
 
-        {/* Recent Transactions */}
-        <div style={{ background: 'white', padding: '20px', borderRadius: '10px' }}>
-          <h3>Recent Transactions</h3>
+        {/* Transacciones Recientes */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Transacciones Recientes</h3>
           {transactions.length === 0 ? (
-            <p>No transactions yet</p>
+            <p className="text-gray-500">No hay transacciones recientes</p>
           ) : (
-            <div style={{ display: 'grid', gap: '15px' }}>
-              {transactions.map(transaction => (
-                <div key={transaction.id} style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  padding: '10px', 
-                  borderBottom: '1px solid #ecf0f1',
-                  color: transaction.amount > 0 ? '#27ae60' : '#e74c3c'
-                }}>
+            <div className="space-y-3">
+              {transactions.slice(0, 5).map(transaction => (
+                <div key={transaction.id} className="flex justify-between items-center p-3 border rounded">
                   <div>
-                    <strong>Transaction #{transaction.id}</strong>
-                    <p style={{ margin: 0, color: '#7f8c8d' }}>
-                      Category: {transaction.categoryID} | Method: {transaction.paymentMethodID}
-                    </p>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <strong>{transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount)}</strong>
-                    <p style={{ margin: 0, color: '#7f8c8d' }}>
+                    <p className="font-medium">{transaction.description}</p>
+                    <p className="text-sm text-gray-500">
                       {new Date(transaction.date).toLocaleDateString()}
                     </p>
                   </div>
+                  <span className={`font-bold ${
+                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
+                  </span>
                 </div>
               ))}
             </div>

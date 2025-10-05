@@ -1,129 +1,87 @@
-// src/pages/Income.tsx
-import React, { useState, useEffect } from 'react';
+// src/pages/Dashboard/Income.tsx
+import React, { useState } from 'react';
 import MainLayout from '../../components/layouts/MainLayout';
-//import { transactionService } from '../../api/transactionService';
-import { categoryService } from '../../api/categoryService';
-import { paymentMethodService } from '../../api/paymentMethodService';
-import type { Category, PaymentMethod } from '../../types';
+import { transactionService } from '../../api/transactionService';
+import { authService } from '../../api/authService';
+import toast from 'react-hot-toast';
 
 const Income: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    amount: '',
-    categoryID: '',
-    paymentMethodID: '',
-    description: ''
-  });
-
-  useEffect(() => {
-    loadFormData();
-  }, []);
-
-  const loadFormData = async () => {
-    try {
-      const [cats, pms] = await Promise.all([
-        categoryService.getAllCategories(),
-        paymentMethodService.getAllPaymentMethods()
-      ]);
-      setCategories(
-        cats.map((cat: any) => ({
-          id: cat.id,
-          name: cat.name,
-          personID: cat.personID ?? 0 // or provide correct mapping if available
-        }))
-      );
-      setPaymentMethods(pms);
-    } catch (error) {
-      console.error('Error loading form data:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      //const amount = parseFloat(formData.amount);
-      //const categoryID = parseInt(formData.categoryID);
-      //const paymentMethodID = parseInt(formData.paymentMethodID);
+  e.preventDefault();
+  setLoading(true);
 
-      //await transactionService.deposit(amount, categoryID, paymentMethodID);
-      
-      alert('Income registered successfully!');
-      setFormData({
-        amount: '',
-        categoryID: '',
-        paymentMethodID: '',
-        description: ''
-      });
-    } catch (error) {
-      console.error('Error registering income:', error);
-      alert('Error registering income');
-    } finally {
-      setLoading(false);
+  try {
+    const numericAmount = parseFloat(amount);
+    if (numericAmount <= 0) {
+      toast.error('El monto debe ser mayor a 0');
+      return;
     }
-  };
+
+    // Registrar el ingreso usando el endpoint real
+    await transactionService.deposit(numericAmount);
+    
+    toast.success('¡Ingreso registrado exitosamente!');
+    
+    // Actualizar balance local
+    authService.updateLocalBalance(numericAmount);
+    
+    // Limpiar formulario
+    setAmount('');
+    setDescription('');
+    setCategoryId('');
+    setPaymentMethodId('');
+    
+    // Recargar para ver cambios
+    setTimeout(() => window.location.href = '/dashboard', 1000);
+    
+  } catch (error: any) {
+    toast.error(error.message || 'Error registrando el ingreso');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <MainLayout>
-      <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-        <h1>💰 Register Income</h1>
+      <div className="max-w-md mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6">💰 Registrar Ingreso</h1>
         
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '15px' }}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label>Amount ($)</label>
+            <label className="block text-sm font-medium mb-2">Monto ($)</label>
             <input
               type="number"
               step="0.01"
               min="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({...formData, amount: e.target.value})}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               required
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="0.00"
             />
           </div>
 
           <div>
-            <label>Category</label>
-            <select
-              value={formData.categoryID}
-              onChange={(e) => setFormData({...formData, categoryID: e.target.value})}
-              required
-            >
-              <option value="">Select a category</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label>Payment Method</label>
-            <select
-              value={formData.paymentMethodID}
-              onChange={(e) => setFormData({...formData, paymentMethodID: e.target.value})}
-              required
-            >
-              <option value="">Select a payment method</option>
-              {paymentMethods.map(pm => (
-                <option key={pm.id} value={pm.id}>{pm.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label>Description (Optional)</label>
+            <label className="block text-sm font-medium mb-2">Descripción (Opcional)</label>
             <input
               type="text"
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Descripción del ingreso"
             />
           </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? 'Processing...' : 'Register Income'}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Procesando...' : 'Registrar Ingreso'}
           </button>
         </form>
       </div>
