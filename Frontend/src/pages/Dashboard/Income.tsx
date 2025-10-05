@@ -32,8 +32,6 @@ const Income: React.FC = () => {
     // Limpiar formulario
     setAmount('');
     setDescription('');
-    setCategoryId('');
-    setPaymentMethodId('');
     
     // Recargar para ver cambios
     setTimeout(() => window.location.href = '/dashboard', 1000);

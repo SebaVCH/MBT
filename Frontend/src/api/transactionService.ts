@@ -2,15 +2,46 @@
 import { apiClient } from './apiClient';
 import type { Transaction, Category, PaymentMethod } from '../types/api';
 
+interface DepositResponse {
+  message: string;
+  balance: number;
+}
+
+interface TransactionResponse {
+  id: number;
+  personID: number;
+  categoryID: number;
+  paymentMethodID: number | null;
+  date: string;
+  amount: number;
+  description: string | null;
+}
+
 export const transactionService = {
+
   // Depositar dinero
-  async deposit(amount: number): Promise<void> {
-    await apiClient.post('/person/deposit', { amount });
+  async deposit(amount: number, description?: string): Promise<DepositResponse> {
+    const params = new URLSearchParams();
+    params.append('amount', amount.toString());
+    if (description) {
+      params.append('description', description);
+    }
+    return await apiClient.post<DepositResponse>(`/person/deposit?${params.toString()}`);
   },
 
   // Retirar dinero (gastos)
-  async withdraw(amount: number): Promise<void> {
-    await apiClient.post('/person/withdraw', { amount });
+  async withdraw(
+    amount: number,
+    categoryID: number,
+    paymentMethodID: number,
+    description?: string
+  ): Promise<TransactionResponse> {
+    return await apiClient.post<TransactionResponse>('/person/withdraw', {
+      amount,
+      categoryID,
+      paymentMethodID,
+      description
+    });
   },
 
   // Obtener transacciones (si existe el endpoint)

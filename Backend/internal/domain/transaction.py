@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Integer, ForeignKey, DateTime
+from sqlalchemy import Integer, ForeignKey, DateTime, String
 from sqlalchemy.orm import mapped_column, relationship
 from internal.domain import Base
 
@@ -12,6 +12,7 @@ class Transaction(Base):
     paymentMethodID = mapped_column(Integer, ForeignKey('paymentMethod.id'))
     date = mapped_column(DateTime, default=datetime.datetime.now)
     amount = mapped_column(Integer)
+    description = mapped_column(String(255), nullable=True)
 
     person = relationship("Person", back_populates="transactions")
     category = relationship("Category", back_populates="transactions")

@@ -499,7 +499,7 @@
     </routine>
     <schema id="191" parent="1" name="main">
       <Current>1</Current>
-      <LastIntrospectionLocalTimestamp>2025-09-20.17:24:18</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2025-10-05.13:51:46</LastIntrospectionLocalTimestamp>
     </schema>
     <argument id="192" parent="16">
       <ArgumentDirection>R</ArgumentDirection>
@@ -1738,22 +1738,26 @@
       <Position>6</Position>
       <StoredType>INTEGER|0s</StoredType>
     </column>
-    <foreign-key id="593" parent="559">
+    <column id="593" parent="559" name="description">
+      <Position>7</Position>
+      <StoredType>VARCHAR(255)|0s</StoredType>
+    </column>
+    <foreign-key id="594" parent="559">
       <ColNames>personID</ColNames>
       <RefColNames>id</RefColNames>
       <RefTableName>person</RefTableName>
     </foreign-key>
-    <foreign-key id="594" parent="559">
+    <foreign-key id="595" parent="559">
       <ColNames>categoryID</ColNames>
       <RefColNames>id</RefColNames>
       <RefTableName>category</RefTableName>
     </foreign-key>
-    <foreign-key id="595" parent="559">
+    <foreign-key id="596" parent="559">
       <ColNames>paymentMethodID</ColNames>
       <RefColNames>id</RefColNames>
       <RefTableName>paymentMethod</RefTableName>
     </foreign-key>
-    <key id="596" parent="559">
+    <key id="597" parent="559">
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>

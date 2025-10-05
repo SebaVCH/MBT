@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from internal.domain.paymentMethod import PaymentMethod
 from internal.infrastructure.database.db import get_db
@@ -10,7 +11,7 @@ router = APIRouter(prefix="/payment-method", tags=["payment-method"])
 
 @router.get("/", response_model=list[PaymentMethodResponse])
 def get_all_payment_methods(db: Session = Depends(get_db), current_user: Person = Depends(get_current_user)):
-    return db.query(PaymentMethod).filter(PaymentMethod.personID == current_user.id).all()
+    return db.query(PaymentMethod).filter(or_(PaymentMethod.personID == current_user.id, PaymentMethod.personID == 0)).all()
 
 @router.post("/", response_model=PaymentMethodResponse)
 def create_payment_method(payment_method_data: PaymentMethodCreate, db: Session = Depends(get_db), current_user: Person = Depends(get_current_user)):

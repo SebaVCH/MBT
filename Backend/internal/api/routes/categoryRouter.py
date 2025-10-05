@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from internal.domain.category import Category
 from internal.infrastructure.database.db import get_db
@@ -10,7 +11,7 @@ router = APIRouter(prefix="/category", tags=["category"])
 
 @router.get("/", response_model=list[CategoryResponse])
 def get_all_categories(db: Session = Depends(get_db), current_user: Person = Depends(get_current_user)):
-    categories = db.query(Category).filter(Category.personID == current_user.id).all()
+    categories = db.query(Category).filter(or_(Category.personID == current_user.id, Category.personID == 0), Category.name != "Ingreso").all()
     return categories
 
 @router.post("/", response_model=CategoryResponse)

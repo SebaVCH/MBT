@@ -43,8 +43,22 @@ const Expense: React.FC = () => {
         return;
       }
 
+       if (!categoryId) {
+      toast.error('Debes seleccionar una categoría');
+      return;
+    }
+
+    if (!paymentMethodId) {
+      toast.error('Debes seleccionar un método de pago');
+      return;
+    }
+
       // Usar el endpoint REAL de withdraw
-      await transactionService.withdraw(numericAmount);
+        await transactionService.withdraw(numericAmount,
+        parseInt(categoryId),
+        parseInt(paymentMethodId),
+        description || undefined
+    );
       
       toast.success('¡Gasto registrado exitosamente!');
       
