@@ -13,8 +13,14 @@ const CategoryTester: React.FC = () => {
     setError(null);
     
     try {
-      const categoriesData = await categoryService.getAllCategories();
-      setCategories(categoriesData);
+      const categoriesData = await categoryService.getCategories();
+
+      setCategories(
+        categoriesData.map((category: any) => ({
+          ...category,
+          personId: category.personId ?? 0,
+        }))
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
