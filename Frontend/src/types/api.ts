@@ -17,11 +17,13 @@ export interface Transaction {
 export interface Category {
   id: number;
   name: string;
+  personID: number;
 }
 
 export interface PaymentMethod {
   id: number;
   name: string;
+  personID: number;
 }
 
 // Requests
@@ -42,4 +44,12 @@ export interface DepositRequest {
 
 export interface WithdrawRequest {
   amount: number;
+}
+
+export interface CategoryCreate {
+  name: string;
+}
+
+export interface PaymentMethodCreate {
+  name: string;
 }

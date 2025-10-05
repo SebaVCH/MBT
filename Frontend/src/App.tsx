@@ -12,6 +12,8 @@ import Income from './pages/Dashboard/Income';
 import Expense from './pages/Dashboard/Expense';
 
 import './index.css';
+import Categories from './pages/Dashboard/Categories';
+import PaymentMethods from './pages/Dashboard/PaymentMethods';
 
 const App: React.FC = () => {
   return (
@@ -24,6 +26,8 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
           <Route path="/expense" element={<ProtectedRoute><Expense /></ProtectedRoute>} />
+          <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+          <Route path="/paymentMethods" element={<ProtectedRoute><PaymentMethods /></ProtectedRoute>} />
         </Routes>
       </Router>
       <Toaster position="top-right" />

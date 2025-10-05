@@ -1,20 +1,16 @@
-// src/api/categoryService.ts
 import { apiClient } from './apiClient';
-import type { CategoryResponse, CategoryCreate } from '../types/category';
+import type { Category, CategoryCreate } from '../types/api';
 
 export const categoryService = {
-  // GET /category/
-  async getAllCategories(): Promise<CategoryResponse[]> {
-    return apiClient.get<CategoryResponse[]>('/category/');
+  async getCategories(): Promise<Category[]> {
+    return await apiClient.get<Category[]>('/category/');
   },
 
-  // POST /category/
-  async createCategory(categoryData: CategoryCreate): Promise<CategoryResponse> {
-    return apiClient.post<CategoryResponse>('/category/', categoryData);
+  async createCategory(categoryData: CategoryCreate): Promise<Category> {
+    return await apiClient.post<Category>('/category/', categoryData);
   },
-  
-  // DELETE /category/{id}
+
   async deleteCategory(id: number): Promise<void> {
-    await apiClient.delete<void>(`/category/${id}`);
-  },
+    await apiClient.delete(`/category/${id}`);
+  }
 };
