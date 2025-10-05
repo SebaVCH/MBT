@@ -2,22 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from internal.infrastructure.database.db import get_db
 from internal.domain.person import Person
-from internal.utils.security import decode_token
-from fastapi.security import HTTPBearer
-from fastapi.security import HTTPAuthorizationCredentials
-
-oauth2_scheme = HTTPBearer()
+from internal.api.middleware.auth import get_current_user  # ✅ importar solo esto
 
 router = APIRouter(prefix="/person", tags=["Person"])
-
-def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    payload = decode_token(token.credentials)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Token inválido")
-    user = db.query(Person).filter(Person.id == int(payload["sub"])).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Usuario no encontrado")
-    return user
 
 @router.post("/deposit")
 def deposit(amount: int, user: Person = Depends(get_current_user), db: Session = Depends(get_db)):

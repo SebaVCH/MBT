@@ -2,7 +2,6 @@ from pydantic import BaseModel
 
 class PaymentMethodCreate(BaseModel):
     name: str
-    personID: int
 
 class PaymentMethodResponse(BaseModel):
     id: int
