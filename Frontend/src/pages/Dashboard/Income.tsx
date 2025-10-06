@@ -22,7 +22,7 @@ const Income: React.FC = () => {
     }
 
     // Registrar el ingreso usando el endpoint real
-    await transactionService.deposit(numericAmount);
+    await transactionService.deposit(numericAmount, description || undefined);
     
     toast.success('¡Ingreso registrado exitosamente!');
     

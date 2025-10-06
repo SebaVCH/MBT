@@ -12,6 +12,7 @@ export interface Transaction {
   description: string;
   date: string;
   type: 'income' | 'expense';
+  categoryName?: string;
 }
 
 export interface Category {

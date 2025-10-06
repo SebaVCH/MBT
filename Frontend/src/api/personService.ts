@@ -26,10 +26,36 @@ const mockPersonService = {
 
   async updatePersonBalance(personID: number, newBalance: number): Promise<Person> {
     return apiClient.put<Person>(`/person/${personID}/balance`, { balance: newBalance });
-  }
+  },
+
+  async getBalance(): Promise<{ balance: number }> {
+        return apiClient.get<{ balance: number }>('/person/balance');
+    },
+
+    async getIncome(): Promise<{ total_income: number }> {
+        return apiClient.get<{ total_income: number }>('/person/income');
+    },
+
+    async getExpenses(): Promise<{ total_expenses: number }> {
+        return apiClient.get<{ total_expenses: number }>('/person/expenses');
+    },
+
 };
 
 const realPersonService = {
+
+    async getBalance(): Promise<{ balance: number }> {
+        return apiClient.get<{ balance: number }>('/person/balance');
+    },
+
+    async getIncome(): Promise<{ total_income: number }> {
+        return apiClient.get<{ total_income: number }>('/person/income');
+    },
+
+    async getExpenses(): Promise<{ total_expenses: number }> {
+        return apiClient.get<{ total_expenses: number }>('/person/expenses');
+    },
+
   async getCurrentPerson(): Promise<Person> {
     // Probar diferentes endpoints comunes
     const endpoints = [

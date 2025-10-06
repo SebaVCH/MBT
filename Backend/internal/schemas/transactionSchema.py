@@ -11,10 +11,12 @@ class TransactionCreate(TransactionBase):
 
 class TransactionResponse(TransactionBase):
     id: int
+    amount: int
     personID: int
     categoryID: int
     paymentMethodID: int | None
     date: datetime
+    categoryName: str | None = None
 
     class Config:
         from_attributes = True

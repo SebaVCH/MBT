@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from internal.domain.category import Category
+from internal.domain.transaction import Transaction
 from internal.infrastructure.database.db import get_db
 from internal.schemas.categorySchema import CategoryResponse, CategoryCreate
 from internal.api.middleware.auth import get_current_user

@@ -4,6 +4,7 @@ import MainLayout from '../../components/layouts/MainLayout';
 import { transactionService } from '../../api/transactionService';
 import { authService } from '../../api/authService';
 import type { Transaction, User } from '../../types/api';
+import { personService } from '../../api/personService';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -30,34 +31,46 @@ const Home: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState(0);
+  const [income, setIncome] = useState(0);
+  const [expenses, setExpenses] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const sortedTransactions = transactions.sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const currentTransactions = sortedTransactions.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
-    try {
-      const currentUser = authService.getCurrentUser();
-      setUser(currentUser);
+  try {
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
 
-      const userTransactions = await transactionService.getTransactions();
-      setTransactions(userTransactions);
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const userTransactions = await transactionService.getTransactions();
+    setTransactions(userTransactions);
 
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+    // Fetch new summary data
+    const balanceRes = await personService.getBalance();
+    setBalance(balanceRes.balance);
 
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    const incomeRes = await personService.getIncome();
+    setIncome(incomeRes.total_income);
 
-  const currentBalance = user?.balance || 0;
+    const expensesRes = await personService.getExpenses();
+    setExpenses(expensesRes.total_expenses);
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Datos para el gráfico de barras (Ingresos vs Gastos)
   const barChartData = {
@@ -65,7 +78,7 @@ const Home: React.FC = () => {
     datasets: [
       {
         label: 'Monto ($)',
-        data: [totalIncome, totalExpenses],
+        data: [income, expenses],
         backgroundColor: [
           'rgba(54, 162, 235, 0.8)', // Azul para ingresos
           'rgba(255, 99, 132, 0.8)', // Rojo para gastos
@@ -97,7 +110,7 @@ const Home: React.FC = () => {
     labels: ['Ingresos', 'Gastos', 'Balance Actual'],
     datasets: [
       {
-        data: [totalIncome, totalExpenses, currentBalance],
+        data: [income, expenses, balance],
         backgroundColor: [
           'rgba(54, 162, 235, 0.8)',  // Azul - Ingresos
           'rgba(255, 99, 132, 0.8)',  // Rojo - Gastos
@@ -138,21 +151,21 @@ const Home: React.FC = () => {
           <div className="bg-white p-6 rounded-lg shadow text-center">
             <h3 className="text-gray-600 mb-2">Balance Actual</h3>
             <p className="text-3xl font-bold text-green-600">
-              ${currentBalance.toLocaleString()}
+              ${balance.toLocaleString()}
             </p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow text-center">
             <h3 className="text-gray-600 mb-2">Total Ingresos</h3>
             <p className="text-3xl font-bold text-blue-600">
-              ${totalIncome.toLocaleString()}
+              ${income.toLocaleString()}
             </p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow text-center">
             <h3 className="text-gray-600 mb-2">Total Gastos</h3>
             <p className="text-3xl font-bold text-red-600">
-              ${totalExpenses.toLocaleString()}
+              ${expenses.toLocaleString()}
             </p>
           </div>
         </div>
@@ -174,23 +187,48 @@ const Home: React.FC = () => {
           {transactions.length === 0 ? (
             <p className="text-gray-500">No hay transacciones recientes</p>
           ) : (
-            <div className="space-y-3">
-              {transactions.slice(0, 5).map(transaction => (
-                <div key={transaction.id} className="flex justify-between items-center p-3 border rounded">
-                  <div>
-                    <p className="font-medium">{transaction.description}</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(transaction.date).toLocaleDateString()}
-                    </p>
+            <>
+              <div className="space-y-3">
+                {currentTransactions.map(transaction => (
+                  <div key={transaction.id} className="flex justify-between items-center p-3 border rounded">
+                    <div>
+                      <p className="font-medium">{transaction.description || 'Sin descripción'}</p>
+                      <p className="text-sm text-gray-500">
+                        {transaction.categoryName || 'Sin categoría'} • {new Date(transaction.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className={`font-bold ${
+                      transaction.categoryName?.toLowerCase() === 'ingreso' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.categoryName?.toLowerCase() === 'ingreso' ? '+' : '-'}${transaction.amount}
+                    </span>
                   </div>
-                  <span className={`font-bold ${
-                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
+                ))}
+              </div>
+
+              {/* Controles de paginación */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-4">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    Anterior
+                  </button>
+                  <span className="text-gray-600">
+                    Página {currentPage} de {totalPages}
                   </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    Siguiente
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>

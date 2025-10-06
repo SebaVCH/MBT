@@ -47,7 +47,7 @@ export const transactionService = {
   // Obtener transacciones (si existe el endpoint)
   async getTransactions(): Promise<Transaction[]> {
     try {
-      return await apiClient.get<Transaction[]>('/transactions');
+      return await apiClient.get<Transaction[]>('/person/transactions');
     } catch (error) {
       // Si no existe el endpoint, devolver array vacío
       return [];

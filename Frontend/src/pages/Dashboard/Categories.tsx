@@ -95,12 +95,12 @@ const Categories: React.FC = () => {
                     className="flex justify-between items-center p-4 border border-gray-200 rounded-lg"
                   >
                     <span className="font-medium">{category.name}</span>
-                    <button
+                    {category.personID !== 0 && (<button
                       onClick={() => handleDelete(category.id)}
                       className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
                     >
                       Eliminar
-                    </button>
+                    </button>)}
                   </div>
                 ))}
               </div>

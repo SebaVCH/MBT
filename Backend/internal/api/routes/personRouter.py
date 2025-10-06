@@ -105,4 +105,19 @@ def get_user_expenses(db: Session = Depends(get_db), user: Person = Depends(get_
 @router.get("/transactions", response_model=list[TransactionResponse])
 def get_user_transactions(db: Session = Depends(get_db), user: Person = Depends(get_current_user)):
     transactions = db.query(Transaction).filter(Transaction.personID == user.id).all()
-    return transactions
+
+    result = []
+    for t in transactions:
+        transaction_dict = {
+            "id": t.id,
+            "amount": t.amount,
+            "description": t.description,
+            "personID": t.personID,
+            "categoryID": t.categoryID,
+            "paymentMethodID": t.paymentMethodID,
+            "date": t.date,
+            "categoryName": t.category.name if t.category else None
+        }
+        result.append(transaction_dict)
+
+    return result
