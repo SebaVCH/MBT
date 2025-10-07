@@ -1,3 +1,5 @@
+import json
+import os
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,6 +12,7 @@ from internal.infrastructure.database.db import get_db
 from internal.domain.person import Person
 from internal.api.middleware.auth import get_current_user
 from internal.schemas.transactionSchema import TransactionResponse, WithdrawRequest
+from ollama import chat
 
 router = APIRouter(prefix="/person", tags=["Person"])
 
@@ -121,3 +124,65 @@ def get_user_transactions(db: Session = Depends(get_db), user: Person = Depends(
         result.append(transaction_dict)
 
     return result
+
+@router.get("/ai-tips")
+def get_financial_tips(db: Session = Depends(get_db), user: Person = Depends(get_current_user)):
+
+    transactions = db.query(Transaction).filter(Transaction.personID == user.id).order_by(Transaction.date.desc()).all()
+
+    if len(transactions) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No tienes transacciones registradas. ¡Comienza a registrar tus movimientos financieros para recibir consejos personalizados!"
+    )
+
+    selected_transactions = transactions if len(transactions) < 10 else transactions[:20]
+
+    transaction_summary = []
+    for t in selected_transactions:
+        transaction_summary.append({
+            "fecha": t.date.strftime("%Y-%m-%d"),
+            "categoria": t.category.name if t.category else "Sin categoría",
+            "monto": t.amount,
+            "descripcion": t.description or "Sin descripción"
+        })
+
+    # Crear prompt optimista y alegre
+    prompt = f"""¡Hola! 🌟 Soy tu asistente financiero personal y estoy aquí para ayudarte a brillar con tus finanzas.
+
+He analizado tus últimas {len(selected_transactions)} transacciones y quiero compartir contigo algunos consejos súper positivos para que sigas creciendo económicamente. 
+
+Aquí están tus transacciones recientes:
+{json.dumps(transaction_summary, indent=2, ensure_ascii=False)}
+
+Por favor, proporcioname 3-5 tips financieros personalizados basados en estos datos. Sé:
+- ✨ Optimista y motivador
+- 💡 Práctico y accionable
+- 🎯 Específico a sus patrones de gasto
+- 🌈 Enfocado en oportunidades de mejora
+
+Redacta los consejos en español, de forma amigable y entusiasta. ¡Ayúdame a inspirar mejores hábitos financieros!"""
+
+    try:
+        ai_model = os.getenv("AI_MODEL")
+        response = chat(
+            model=ai_model,
+            messages=[{
+                'role': 'user',
+                'content': prompt
+            }]
+        )
+
+        tips_text = response['message']['content']
+
+        return {
+            "tips": tips_text,
+            "generated_at": datetime.now().isoformat(),
+            "transactions_analyzed": len(selected_transactions)
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al generar tips con IA: {str(e)}"
+        )

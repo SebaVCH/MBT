@@ -14,6 +14,7 @@ import Expense from './pages/Dashboard/Expense';
 import './index.css';
 import Categories from './pages/Dashboard/Categories';
 import PaymentMethods from './pages/Dashboard/PaymentMethods';
+import AITips from "./pages/Dashboard/AITips.tsx";
 
 const App: React.FC = () => {
   return (
@@ -28,6 +29,7 @@ const App: React.FC = () => {
           <Route path="/expense" element={<ProtectedRoute><Expense /></ProtectedRoute>} />
           <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
           <Route path="/paymentMethods" element={<ProtectedRoute><PaymentMethods /></ProtectedRoute>} />
+          <Route path="/ai-tips" element={<ProtectedRoute><AITips /></ProtectedRoute>} />
         </Routes>
       </Router>
       <Toaster position="top-right" />

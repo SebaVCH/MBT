@@ -19,7 +19,7 @@ const Sidebar: React.FC = () => {
     { path: '/expense', label: 'Gastos', icon: '💸' },
     { path: '/categories', label: 'Categorias', icon: '📄'},
     { path: '/paymentMethods', label: 'Métodos de Pago', icon: '💳' },
-
+    { path: '/ai-tips', label: 'Asistente IA', icon: '🤖' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
