@@ -12,7 +12,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
         {/* Logo o título de la app */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            💰 ExpenseTracker
+            💰 MBT
           </h1>
           <p className="text-gray-600">Controla tus finanzas fácilmente</p>
         </div>
