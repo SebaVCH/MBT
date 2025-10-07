@@ -1,6 +1,7 @@
 import pytest
 from internal.utils.security import hash_password, verify_password
 
+# Test para probar las funciones de hashing y verificación de contraseñas
 class TestPasswordHashing:
 
     def testHashPassword_NormalPassword_PasswordHashed(self):
