@@ -4,12 +4,17 @@ services:
       context: ./Backend
     ports:
       - "8000:8000"
+    env_file:
+      - ./Backend/.env
     environment:
       - PYTHONPATH=/app
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
     volumes:
       - ./Backend/database.db:/app/database.db
     networks:
       - mbt-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     build:

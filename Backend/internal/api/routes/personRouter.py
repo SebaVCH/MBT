@@ -12,7 +12,7 @@ from internal.infrastructure.database.db import get_db
 from internal.domain.person import Person
 from internal.api.middleware.auth import get_current_user
 from internal.schemas.transactionSchema import TransactionResponse, WithdrawRequest
-from ollama import chat
+from ollama import chat, Client
 
 router = APIRouter(prefix="/person", tags=["Person"])
 
@@ -165,7 +165,9 @@ Redacta los consejos en español, de forma amigable y entusiasta. ¡Ayúdame a i
 
     try:
         ai_model = os.getenv("AI_MODEL")
-        response = chat(
+        ollama_host = os.getenv("OLLAMA_HOST")
+        client = Client(host=ollama_host)
+        response = client.chat(
             model=ai_model,
             messages=[{
                 'role': 'user',
